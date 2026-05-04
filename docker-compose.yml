@@ -1,0 +1,46 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: auth_foundation
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # First-time cluster init can exceed a short start_period; keep checks cheap (server ready, not DB name)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 45s
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-3000}:3000"
+    environment:
+      # Reach Postgres by Docker service name (overrides host .env DATABASE_URL)
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/auth_foundation
+      NODE_ENV: production
+      PORT: "3000"
+      # Required; set in a project `.env` file (Compose loads it for substitution) or export before `up`
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      ACCESS_TOKEN_TTL_SEC: ${ACCESS_TOKEN_TTL_SEC:-900}
+      REFRESH_TOKEN_TTL_SEC: ${REFRESH_TOKEN_TTL_SEC:-604800}
+      PASSWORD_RESET_TTL_SEC: ${PASSWORD_RESET_TTL_SEC:-3600}
+      PASSWORD_RESET_RETURN_TOKEN: ${PASSWORD_RESET_RETURN_TOKEN:-true}
+      CORS_ORIGIN: ${CORS_ORIGIN:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
