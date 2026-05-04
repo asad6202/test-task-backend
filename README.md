@@ -32,7 +32,7 @@ npx prisma migrate deploy
 npm run dev
 ```
 
-Keep `DATABASE_URL` in `.env` pointing at `localhost:5435` (see [`.env.example`](.env.example)).
+Keep `DATABASE_URL` in `.env` pointing at `localhost:5432` (see [`.env.example`](.env.example)).
 
 **Option B — Full stack in Docker (Postgres + API)**
 
@@ -105,6 +105,8 @@ Manual flow without scripts: copy `accessToken` from login/register into the **A
 **Logout (`POST /auth/logout`):** send `refreshToken` as JSON **or** `application/x-www-form-urlencoded`. No **Authorization** header required. Wrong or revoked token → **401** `INVALID_TOKEN`. After server changes: `docker compose up --build -d`.
 
 ## Folder structure
+
+A plain-language walkthrough of the same layout: [FOLDER_STRUCTURE.md](FOLDER_STRUCTURE.md).
 
 | Path | Role |
 |------|------|
